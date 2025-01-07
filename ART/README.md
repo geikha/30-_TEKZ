@@ -6,7 +6,7 @@ Artwork for the single release:
 
 ## The Sports Bike
 
-The composite of the bike was using [Hydra Video Synth](https://github.com/hydra-synth/hydra).
+The composite of the bike was made using [Hydra Video Synth](https://github.com/hydra-synth/hydra).
 
 ![image](./30-_TEKZ_ART_BIKE.png)
 
