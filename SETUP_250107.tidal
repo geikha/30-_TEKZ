@@ -1,0 +1,450 @@
+-- Abbreviations
+
+let ar a r = attack a # release r
+    asr a s r = sustain s # ar a r
+    asdr a s d r = decay d # asr a s r
+    ahr a h r = hold h # ar a r
+    oc = octave
+    o = orbit
+    dist = distort
+    g = gain
+    l = legato
+    c = cut
+    b = begin
+    e = end
+    sp = speed
+    sc = scale
+    sz = size
+    sup = superimpose
+    acc = accelerate
+    sh = shape
+    nt = note
+    ts = timescale
+    tsw = timescalewin
+    deg = degrade
+    degby = degradeBy
+    degBy = degradeBy
+    str = struct
+    lAt = loopAt
+    lat = lAt
+    sm = sometimes
+    smtm = sometimes
+    smts = sometimes
+    sometiems = sometimes
+    soemtimes = sometimes
+    soemtiems = sometimes
+    somtimes = sometimes
+    smtms = sometimes
+    smby = sometimesBy
+    smtmsby = sometimesBy
+    smtmsBy = sometimesBy
+    smtsby = sometimesBy
+    smtsBy = sometimesBy
+    tl = timeLoop
+    rep = repeatCycles
+    fastrep n f = fast (fmap (toRational) n) $ repeatCycles n f
+
+let xfdin = xfadeIn
+    intrp = interpolate
+    intrpin = interpolateIn
+    clutchin = clutchIn
+    jmpmd = jumpMod
+
+-- Shorthands
+
+let delay' a t fb = delay a # delayt t # delayfb fb
+    trem' r d = tremolorate r # tremolodepth d
+    phaser' r d = phaserrate r # phaserdepth d
+    room' r siz = room r # size siz
+    ring' a f = ring a # ringf f
+    declick = attack 0.01 # release 99
+
+-- Complex shorthands
+
+let begin' d p = begin (p |/ d)
+    end' d p = end (p |/ d)
+    be' d l p = begin (p |/ d) # end ((p |+ l) |/ d)
+    b' = begin'
+    e' = end'
+    timeLoop' n o f = timeLoop n $ (o <~) f
+    timeLoop'' n o f = (o ~>) $ timeLoop n $ (o <~) f
+    tl' = timeLoop'
+    tl'' = timeLoop''
+    offcut t fs f = off t (fs . (|+ cut 1)) f
+    supcut fs f = sup (fs . (|+ cut 1)) f
+
+-- Oscillators
+
+let sinosc  min max frq = (fast frq $ range min max sine)
+    triosc  min max frq = (fast frq $ range min max tri)
+    sqrosc  min max frq = (fast frq $ range min max square)
+    sawosc  min max frq = (fast frq $ range min max saw)
+    randosc min max = (range min max rand)
+
+-- Utils
+
+let panrand = (# pan rand)
+    panrand' n = (# pan (randosc (0.5-n) (0.5+n)))
+    humanize = smtmsby 0.6 (|+ nudge ((rand-0.5)*0.012))
+    humanize' f = (|+ note ((rand+0.5)*0.12)) $ humanize $ f
+    maymute n pos = outside n (someCyclesBy pos (struct "f"))
+    invnote n = 0-n
+    invnote' a n = a-n
+    -- xfd = xfade
+    xenscale n = map (\x -> x / n * 12) [0..(n-1)]
+    xen n p = toScale (xenscale n) p
+    un1 = mask "f@1s t"
+    un4 = inside 4 un1
+    bypass f = id
+    rate' r f = fast (fmap toRational r) $ (|* speed r) $ f
+
+let midicps d = 2 ** ((d-69)/12) * 440 -- pulu
+    ncps n = midicps (n+60)
+    nms n = 1 / (ncps n)
+    midiratio n = midicps n / midicps 0
+
+-- Looping
+
+let striateAt  str at f = slow   at $ striate (fast at $ str) f
+    chopAt     str at f = slow   at $ chop    (fast at $ str) f
+    sloopAt    str at f = loopAt at $ striate (fast at $ str) f
+    striateAt' str at f = striateAt (str |* at) (fmap toRational at) f
+    chopAt'    str at f = chopAt    (str |* at) (fmap toRational at) f
+    sloopAt'   str at f = sloopAt   (str |* at) (fmap toRational at) f
+    strat  = striateAt
+    chat   = chopAt
+    slat   = sloopAt
+    strat' = striateAt'
+    chat'  = chopAt'
+    slat'  = sloopAt'
+
+-- Runmod
+
+let runmod   r m o     = ((run r) |% m |+ o)
+    runmod'  r m mul o = ((run r) |% m |* mul |+ o)
+    runmod'' r mul m o = ((run r) |* mul |% m |+ 0)
+    slicemod r m o     = slice r (runmod r m o)
+    bitemod  r m o     = bite  r (runmod r m o)
+
+:{
+let revOn' vs f = case vs of
+        []     -> f
+        (x:xs) -> inside x rev $ rev $ revOn' xs f
+    revOn x = revOn' [x]
+:}
+
+-- ukg
+
+let ukswing = swingBy (1/5) 8
+
+let ukshift = ((("1 0")/16) <~ )
+    ukshift2 = ((("0 1")/16) <~ )
+
+-- Parameters
+
+let wider = pF "wider"
+let side n = pF "side" $ ((n-0.5)*2)
+let invst =  pB "invst" (pure True)
+
+let formant = pF "formant"
+    pitch   = pF "pitch"
+
+let lpfrel    = pF "lpfrel"
+    lpfcurve  = pF "lpfcurve"
+
+let gater = pF "gater"
+
+let snf = pF "snf"
+    snfb = pF "snfb"
+    sns = pF "sns"
+    snt = pF "snt"
+    snr = pF "snr"
+    snres = pF "snres"
+
+let air = pF "air"
+
+let atake = pF "atake"
+    atk = atake
+    ataket = pF "ataket"
+    atkt = ataket
+
+let eq  f a   = pF "eqf" f # pF "eqa" a
+    eq' f a q = pF "eqf" f # pF "eqa" a # pF "eqq" q
+    eqq = pF "eqq"
+    eq2  f a   = pF "eqf2" f # pF "eqa2" a
+    eq2' f a q = pF "eqf2" f # pF "eqa2" a # pF "eqq2" q
+
+-- BPM related
+
+:{
+let currentcps = 0
+    getcps = streamGetcps tidal
+    getbpm = do
+                currentcps <- streamGetcps tidal
+                return (currentcps*60*4)
+    getbpm' m = do
+                currentcps <- streamGetcps tidal
+                return (currentcps*60*m)
+    setbpm bpm = setcps (bpm/60/4)
+    setbpm' bpm m = setcps (bpm/60/m)
+    getnow n = do
+        x <- streamGetnow tidal
+        return (Data.Fixed.mod' x n)
+:}
+
+-- tidal-drum-machines
+
+:{
+let drumMachine name ps = stack
+                    (map (\ x ->
+                        (# s (name ++| (extractS "s" (x)))) $ x
+                        ) ps)
+    drumFrom name drum = s (name ++| drum)
+    drumM = drumMachine
+    drumF = drumFrom
+:}
+
+--FM
+-- let fmin i amp = (# pI "fmin" i) . (# pF "fmamp" amp)
+--     fmout o = orbit (12+o)
+--     fm output = (# s "fmsine") . (# fmout output)
+--     fm1 = p "fm1" . fm 0
+--     fm2 = p "fm2" . fm 1
+--     fm3 = p "fm3" . fm 2
+--     fm4 = p "fm4" . fm 3
+--     fm5 = p "fm5" . fm 4
+--     fm6 = p "fm6" . fm 5
+
+-- Scales from samples
+
+let scale = getScale (scaleTable ++ [("phrygianDominant",[0,1,4,5,7,8,10])])
+    dnd n = scale "minor" n - 1 -- bminor
+    dndbass = dnd "<[0 ~ 0 ~ 0 ~ 0 2] [0 ~ 0 ~ 0 ~ 0 -1] [-2 ~ -2 ~ -2 ~ -2 -3] [-1 ~ -1 ~ -1 ~ -1_]>"
+    flm n = scale "minor" n + 2 -- dminor
+    lvz n = scale "phrygianDominant" n + 1 -- cs phrygian dom -- amajor
+    rsg = flm
+    rsmr n = scale "minor" n + 3 -- ebminor
+    sgtn n = scale "minor" n + 4 -- eminor
+    vlnd n = scale "minor" n + 1 -- abminor
+    vlndbass = vlnd "[0__ -1____ -2__ -3____ -4__ -2____ ~ !8]/2"
+    crts n = scale "phrygian" n + 3 -- ebphrygian -- bmajor
+    almndra n = scale "minor" n - 2 -- bbminor
+    imagenes n = scale "minor" n - 3 -- aminor
+    mimi n = scale "phrygian" n -- cphrygian -- abmajor
+    ua n = scale "phrygian" n + 4 -- ephrygian -- cmajor
+    efred n = scale "minor" n - 5 --gminor
+    business n = (scale "major" n-4) -- g#major
+    tamochelo n = (scale "minor" n-1) --bminor
+    boys n = (scale "major" n+2) --dmajor
+    cochinae n = (scale "minor" n-2) --bbminor
+    portobonito n = (scale "minor" n+1) --c#minor
+    letmecover n = (scale "minor" n-5) --gminor
+    andocaminando n = (scale "major" n-3) --amajor
+    boa n = (scale "minor" n-4) --abminor
+    cuento n = (scale "dorian" n+3) --ebdorian -- dbmajor
+    dubgtr n = (scale "minor" n-3) --aminor
+    hitda n = (scale "minor" n-1) --bminor
+    human n = (scale "major" n+2) --dmajor
+    mac n = (scale "minor" n-1) --bminor
+    mm n = (scale "major" n+6) --fsharpmajor
+    nd n = (scale "minor" n+3) --ebminor
+    nightcrawlers n = (scale "minor" n+6) --fsharpminor
+    notacup n = (scale "phrygian" n+2) --dphrygian -- bbmajor
+    hotdog n = (scale "minor" n+4) -- eminor
+    piso = hotdog
+    skme n = (scale "minor" n+3) -- ebminor
+    snitch n = (scale "minor" n+6) --fsminor
+    three n = (scale "minor" n-2) --bbminor
+    tippin n = (scale "minor" n+6) --fsminor
+    yovoy n = (scale "major" n-2) --bbminor
+    rhloop n = (scale "minor" n-1) --bminor
+    rhloop1 n = (scale "minor" n+4) --eminor
+    vete n = (scale "major" n-6+12) --fsmajor
+    kitana n = (scale "major" n-4) --abmajor
+    gitana n = (scale "minor" n+1) --csminor
+    letter n = (scale "minor" n+6) -- fsminor
+    perra n = (scale "minor" n-3) -- aminor
+    _5050 n = (scale "minor" n+2) -- dminor
+    turrito n = (scale "minor" n-3) --aminor
+    igotfive n = note (scale "minor" n-2) --asminor
+    bienloco n = (scale "minor" n-5) -- gminor
+    mirlos n = (scale "minor" n-3) -- aminor
+    oregano n = (scale "minor" n+1) -- csmajor
+    amandote n = (scale "minor" n-2) --bbminor
+    amanecer n = (scale "minor" n+6) --fsminor
+    aportodo n = (scale "major" n) -- cmajor
+    laocasion n = (scale "minor" n-3) --aminor
+    yosequetuquieres n = (scale "minor" n-4) -- abminor
+    corazonvacio n = (scale "minor" n+3) --dsminor
+    cherrywaves n = (scale "major" n+2) --dmajor
+    dormida n = (scale "minor" n-3) -- aminor
+    titan n = (scale "minor" n+5) -- fminor
+    aristas n = (scale "minor" n+5) -- fminor
+    how n = (scale "minor" n-1) --bminor
+    serpent n = (scale "minor" n+4) --eminor
+    provenza n = (scale "major" n-4) --abmajor
+    malaconducta n = (scale "minor" n+6) --fsminor
+    qlona n = (scale "minor" n-5) -- gminor
+    forthree n = (scale "major" n+1) --csmajor
+    bailenomorro n = (scale "minor" n+3) --ebminor
+    choca n = (scale "minor" n+4) --eminor
+    myownsummer n = (scale "major" n+1) --dbmajor
+    _if n = (scale "minor" n-1) --bminor
+    turra n = (scale "minor" n+6) --fsminor
+    whoisit n = (scale "major" n+5) --fmajor
+    ladyinmylife n = (scale "minor" n-3) --aminor
+    saturdaynight n = (scale "minor" n-1) --bminor
+    aportodoch = "<c'maj7'o a'min'o [e4'm7'ii,e3] _>" :: Pattern Note
+    corazonvacioch = "<ds'minor fs'major cs'maj gs'minor>" :: Pattern Note
+    turritoch = "<[2,12,14,17,21] [2,14,17,19,23] [9,12,16,21]!2>" |- 12 :: Pattern Note
+
+-- Rhythms
+
+-- :set -XFlexibleContexts
+
+:{
+let footworks = [
+        g "1 ~ ~ 1 ~ ~ 1 ~ 1 ~ ~ 1 ~ ~ 1 ~ ",
+        g "1 ~ ~ 1 ~ ~ 1 ~ 1 ~ ~ ~ 1 ~ ~ ~ ",
+        g "1 ~ ~ 1 ~ 1 1 ~ 1 ~ ~ 1 ~ 1 1 ~ ",
+        g "1 ~ ~ 1 ~ 1 1 ~ 1 ~ ~ 1 ~ ~ 1 ~ ",
+        g "1 ~ 1 ~ ~ 1 ~ ~ 1 ~ 1 ~ ~ 1 ~ ~ ",
+        g "1 ~ ~ 1 ~ 1 ~ 1 ~ ~ 1 ~ 1 ~ 1 ~ ",
+        g "1 ~ 1 ~ ~ 1 ~ 1 ~ ~ 1 ~ 1 ~ 1 ~ ",
+        g "1 ~ ~ 1 ~ ~ 1 ~ 1 ~ 1 ~ 1 ~ 1 ~ ",
+        g "1 ~ ~ 1 ~ 1 ~ 1 1 ~ ~ 1 ~ ~ 1 ~ ",
+        g "1 ~ ~ 1 ~ ~ 1 1 1 ~ ~ 1 1 ~ 1 ~ ",
+        g "1 ~ ~ 1 1 ~ 1 ~ ~ 1 ~ ~ 1 ~ ~ ~ ",
+        g "1 ~ 1 1 ~ ~ 1 ~ 1 1 ~ ~ 1 ~ ~ ~ ",
+        g "1 ~ 1 1 ~ ~ ~ 1 1 ~ 1 ~ ~ ~ 1 ~ ",
+        g "1 ~ ~ ~ 1 ~ ~ 1 1 ~ ~ 1 ~ ~ 1 ~ ",
+        g "1 ~ ~ ~ 1 ~ ~ 1 1 ~ 1 ~ 1 1 ~ ~ ",
+        g "1 ~ ~ 1 ~ 1 ~ ~ ~ 1 ~ 1 1 ~ 1 ~ ",
+        g "1 ~ 1 1 ~ 1 ~ 1 ~ ~ 1 ~ 1 ~ ~ ~ ",
+        g "1 ~ ~ 1 1 ~ 1 ~ 1 ~ ~ 1 1 1 ~ ~ ",
+        g "1 ~ 1 1 ~ ~ 1 ~ 1 ~ 1 1 ~ ~ 1 ~ ",
+        g "1 1 ~ 1 ~ 1 ~ ~ 1 1 ~ ~ 1 ~ ~ ~ ",
+        g "1 1 ~ 1 ~ ~ 1 ~ 1 1 ~ 1 ~ 1 ~ ~ ",
+        g "1 1 ~ 1 1 ~ ~ 1 1 ~ ~ 1 1 ~ 1 ~ ",
+        g "1 ~ 1 ~ 1 1 ~ 1 1 ~ ~ 1 1 ~ ~ 1 ",
+        g "1 1 1 1 ~ ~ 1 ~ 1 1 1 1 ~ ~ 1 ~ "
+        ] --24
+    foot p = mono $ select (p|/24) footworks
+    libertad = g "<[1*2 1 1*2 1] [1!7 ~ ]>"
+    jersey = g "1*2 [1 _ _ 1 _ _ 1 _]"
+    rktsd = fast 2 $ "~ ~ ~ 1 ~ ~ 1 ~"
+    rktsd2 = fast 2 $ "<[~ ~ ~ 1 ~ ~ 1 ~] [~ 1 ~ 1 ~ ~ 1 ~]>"
+:}
+
+-- still experimenting
+:{
+-- given a pattern of lists (using polyphony) of Num n, and a subdivision, place a note at the nth time of the subdivision
+-- idea by jaderowland
+_beat ns k = struct $ fastFromList [i `elem` ns | i <- [0..k-1]]
+beat ns k = tParam2 _beat (collect ns) k
+
+-- given a pattern of lists (using polyphony) of Num n, place a note occupying n spaces of a relative total
+-- idea by yaxu
+iois p = struct $ squeezeJoin $ fmap listToDurPat $ collect p
+         where listToDurPat l = timeCat $ fmap (\el -> (el, pure True)) l
+
+-- degrade and repeat
+_degrep prob pos = mask $ timeLoop 1 $ rotR pos $ wchoose [(False, prob), (True, 1-prob)]
+degrep = tParam2 _degrep
+:}
+
+:{
+let sampleRate = 44100
+    nsr = nudge (1/sampleRate*2048)
+    freeze f = pF "freeze" f |- nsr
+    enhance f = pF "enhance" f |- nsr
+    comb f = pF "comb" f |- nsr
+    smear f = pF "smear" f |- nsr
+    scram f = pF "scram" f |- nsr
+    binshift f = pF "binshift" f |- nsr
+    hbrick f = pF "hbrick" f |- nsr
+    lbrick f = pF "lbrick" f |- nsr
+:}
+
+:{
+import Sound.Tidal.Pattern
+import Sound.Tidal.Time
+import Data.Maybe (mapMaybe)
+import Data.List (sortBy)
+
+encloseEvent :: Arc -> Event a -> Maybe (Event a)
+encloseEvent _ (Event _ Nothing _ _) = Nothing -- TODO how to handle analogs
+encloseEvent a@(Arc as ae) ev@(Event ctx (Just w@(Arc ws we)) part val)
+  | we <= as || ws >= ae = Nothing -- outside
+  | ws >= as && we <= ae = Just ev -- fully within
+  | otherwise = Just ev { part = sect w a } -- intersects
+
+withEventsOnArc :: ([Event a] -> [Event a]) -> (Arc -> Arc) -> Pattern a -> Pattern a
+withEventsOnArc ef af pat = splitQueries $ pat {query = \st -> mapMaybe (encloseEvent $ arc st) $ ef $ query pat st { arc = af $ arc st }}
+
+withEventOnArc :: (Event a -> Event a) -> (Arc -> Arc) -> Pattern a -> Pattern a
+withEventOnArc ef af pat = withEventsOnArc (ef <$>) af pat
+
+_quant :: Time -> Pattern a -> Pattern a
+_quant 0 pat = pat
+_quant k pat =
+  withEventOnArc (quantEvent k) (surround) pat
+  where
+    surround qa@(Arc qs qe) = Arc (qs - lookahead) (qe + lookahead)
+    lookahead = 1/k
+    quantEvent k ev = ev { whole = (fmap rounding <$> whole ev) }
+    rounding n = (roundNumerator n) % k'
+    roundNumerator n = (nn * k' + (nd `div` 2)) `div` nd
+      where nn = numerator n
+            nd = denominator n
+    k' = numerator k
+
+quant :: Pattern Time -> Pattern a -> Pattern a
+quant = tParam _quant
+
+_fill :: Time -> Time -> Pattern a -> Pattern a
+_fill l m pat =
+  withEventsOnArc (map multiplyEvent . updateEvents . sortEvents) (lookahead) pat
+  where lookahead a = a { start = (`subtract` l) $ start a, stop = (+l) $ stop a }
+        sortEvents = sortBy (\e0 e1 -> compare (start $ part e0) (start $ part e1))
+        updateEvents es = (zipWith updatePair es (drop 1 es)) ++ safeLast es
+        safeLast [] = []
+        safeLast es = [last es]
+        updatePair ev ev2 = ev { whole = (liftA2 updateArc (whole ev) (whole ev2)) }
+        updateArc (Arc s0 _) (Arc s1 _) = Arc s0 s1
+        multiplyEvent ev = ev { whole = multiplyDuration <$> whole ev }
+        multiplyDuration (Arc s e) = Arc s (s + ((e-s)*m))
+
+fill :: Pattern Time -> Pattern a -> Pattern a
+fill = tParam (_fill 1)
+
+fill' :: Pattern Time -> Pattern Time -> Pattern a -> Pattern a
+fill' = tParam2 _fill
+
+-- | If an event ends before it starts, switch starts with ends
+unflipEvent :: Event a -> Event a
+unflipEvent ev@(Event _ (Just (Arc ws we)) (Arc ps pe) _) = if we >= ws then ev else ev { whole = (Just (Arc we ws)), part = (Arc pe ps) }
+unflipEvent ev@(Event _ Nothing (Arc ps pe) _) = if pe >= ps then ev else ev { part = (Arc pe ps) }
+
+alterT :: (Time -> Time) -> Pattern a -> Pattern a
+alterT f pat =
+  withEventOnArc (unflipEvent . alterEvent) (timeToCycleArc . start) pat
+  where alterEvent ev = ev { whole = (fmap (mapCycle f) $ whole ev) }
+
+alterF :: (Double -> Double) -> Pattern a -> Pattern a
+alterF f pat =
+  withEventOnArc (unflipEvent . alterEvent) (timeToCycleArc . start) pat
+  where alterEvent ev = ev { whole = (fmap (mapCycle f') $ whole ev) }
+        f' = toRational . f . fromRational
+:}
+
+:{
+arrange :: [(Time, Pattern a)] -> Pattern a
+arrange secs = _slow total $ timeCat fastened
+  where total = sum $ fst <$> secs
+        fastened = (\(cyc,sec) -> (cyc, _fast cyc $ sec)) <$> secs
+arrange' :: [(Time, [Pattern a])] -> Pattern a
+arrange' secs = _slow total $ timeCat fastened
+  where total = sum $ fst <$> secs
+        fastened = (\(cyc,sec) -> (cyc, _fast cyc $ stack sec)) <$> secs
+:}
