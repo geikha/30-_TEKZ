@@ -1,5 +1,5 @@
-# 30*_TEKZ
-Code for my single [*30-_TEKZ*](https://geikha.bandcamp.com/album/30-tekz-coded-01), which is in itself an edit of the song *30 Grados* by El Turko & Mandale Flow. Made using [TidalCycles](https://github.com/tidalcycles/Tidal) and [SuperCollider](https://github.com/supercollider/supercollider).
+# 30\*_TEKZ
+Code for my single [*30\*_TEKZ*](https://geikha.bandcamp.com/album/30-tekz-coded-01), which is in itself an edit of the song *30 Grados* by El Turko & Mandale Flow. Made using [TidalCycles](https://github.com/tidalcycles/Tidal) and [SuperCollider](https://github.com/supercollider/supercollider).
 
 [![image](./ART/30-_TEKZ_ART.png)](https://geikha.bandcamp.com/album/30-tekz-coded-01)
 
